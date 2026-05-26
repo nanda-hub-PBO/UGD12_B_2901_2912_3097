@@ -1,0 +1,60 @@
+{
+  "cargo": [
+    {
+      "id": "C003",
+      "resi": "TRX-2026-003",
+      "senderName": "CV Laut Jaya",
+      "receiverName": "PT Samudra Baru",
+      "itemName": "Sparepart Kapal",
+      "deliveryStatus": "Sampai Tujuan",
+      "itemStatus": "Selesai",
+      "transactionStatus": "Selesai",
+      "shippingPrice": 3200000
+    },
+    {
+      "id": "C004",
+      "resi": "TRX-2026-004",
+      "senderName": "Maya Putri",
+      "receiverName": "Doni Saputra",
+      "itemName": "Furniture",
+      "deliveryStatus": "Pending",
+      "itemStatus": "Pending",
+      "transactionStatus": "Diproses",
+      "shippingPrice": 1450000
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "K001",
+      "name": "Tessera Hauler 01",
+      "type": "Truk Kontainer",
+      "code": "VH-001",
+      "capacity": "20 Ton",
+      "status": "Diproses"
+    },
+    {
+      "id": "K002",
+      "name": "Tessera Hauler 02",
+      "type": "Truk Box",
+      "code": "VH-002",
+      "capacity": "12 Ton",
+      "status": "Dalam Pengiriman"
+    },
+    {
+      "id": "K003",
+      "name": "Tessera Carrier 03",
+      "type": "Pickup Cargo",
+      "code": "VH-003",
+      "capacity": "2 Ton",
+      "status": "Selesai"
+    },
+    {
+      "id": "K004",
+      "name": "Tessera Carrier 04",
+      "type": "Trailer",
+      "code": "VH-004",
+      "capacity": "30 Ton",
+      "status": "Pending"
+    }
+  ]
+}
