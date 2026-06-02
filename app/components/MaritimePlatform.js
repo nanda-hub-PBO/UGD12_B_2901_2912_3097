@@ -1854,7 +1854,8 @@ function AdminView({ adminMode, onAdminModeChange }) {
         })
 
         if (!response.ok) {
-          throw new Error('Gagal mengambil data cargo.')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || 'Gagal mengambil data cargo.')
         }
 
         const data = await parseApiResponse(response)
@@ -1894,7 +1895,8 @@ function AdminView({ adminMode, onAdminModeChange }) {
         })
 
         if (!response.ok) {
-          throw new Error('Gagal mengambil data kendaraan.')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || 'Gagal mengambil data kendaraan.')
         }
 
         const data = await parseApiResponse(response)

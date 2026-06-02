@@ -220,7 +220,7 @@ export async function GET(request) {
 
     return NextResponse.json({ items })
   } catch (error) {
-    return errorResponse('Gagal mengambil data cargo dari database.', 500)
+    return errorResponse(`Gagal mengambil data cargo: ${error.message || error}`, 500)
   }
 }
 

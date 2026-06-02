@@ -92,7 +92,7 @@ export async function GET() {
     }))
     return NextResponse.json({ items: mappedRows })
   } catch (error) {
-    return errorResponse('Gagal mengambil data kendaraan dari database.', 500)
+    return errorResponse(`Gagal mengambil data kendaraan: ${error.message || error}`, 500)
   }
 }
 
