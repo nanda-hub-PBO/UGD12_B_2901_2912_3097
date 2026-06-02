@@ -1,0 +1,204 @@
+.container {
+  width: 100%;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(20, 5, 31, 0.8) 0%, rgba(13, 6, 22, 0.8) 100%);
+  border: 1px solid rgba(178, 95, 255, 0.18);
+  border-radius: 8px;
+  margin-bottom: 32px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f3ecff;
+  margin: 0;
+}
+
+.searchInput {
+  padding: 10px 14px;
+  background: rgba(30, 8, 44, 0.6);
+  border: 1px solid rgba(178, 95, 255, 0.2);
+  border-radius: 6px;
+  color: #f3ecff;
+  font-size: 14px;
+  min-width: 300px;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: rgba(123, 52, 255, 0.5);
+  background: rgba(30, 8, 44, 0.8);
+  box-shadow: 0 0 12px rgba(123, 52, 255, 0.2);
+}
+
+.searchInput::placeholder {
+  color: rgba(236, 218, 255, 0.4);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead {
+  background: rgba(13, 6, 22, 0.6);
+  border-top: 1px solid rgba(178, 95, 255, 0.18);
+  border-bottom: 1px solid rgba(187, 104, 255, 0.25);
+}
+
+.table thead th {
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: rgba(236, 218, 255, 0.7);
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid rgba(178, 95, 255, 0.12);
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(123, 52, 255, 0.08);
+}
+
+.table tbody td {
+  padding: 12px 14px;
+  color: #f3ecff;
+  vertical-align: middle;
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+}
+
+.statusDefault,
+.statusProcessing,
+.statusDelivered {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.statusDefault {
+  background: rgba(178, 95, 255, 0.15);
+  color: #ab67ff;
+  border: 1px solid rgba(171, 103, 255, 0.3);
+}
+
+.statusProcessing {
+  background: rgba(178, 95, 255, 0.15);
+  color: #ab67ff;
+  border: 1px solid rgba(171, 103, 255, 0.3);
+}
+
+.statusDelivered {
+  background: rgba(0, 239, 159, 0.15);
+  color: #00ef9f;
+  border: 1px solid rgba(0, 239, 159, 0.3);
+}
+
+.priceCell {
+  font-weight: 600;
+  color: #ffd027;
+}
+
+.actionsCell {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.editBtn,
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(178, 95, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(123, 52, 255, 0.1);
+  color: #ab67ff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editBtn:hover {
+  background: rgba(123, 52, 255, 0.2);
+  border-color: rgba(123, 52, 255, 0.5);
+  color: #d4b5ff;
+}
+
+.deleteBtn {
+  border-color: rgba(255, 93, 134, 0.3);
+  background: rgba(255, 93, 134, 0.1);
+  color: #ff5d86;
+}
+
+.deleteBtn:hover {
+  background: rgba(255, 93, 134, 0.2);
+  border-color: rgba(255, 93, 134, 0.5);
+  color: #ff8fa3;
+}
+
+.noData {
+  text-align: center;
+  color: rgba(236, 218, 255, 0.4);
+  padding: 32px 14px !important;
+}
+
+.loading {
+  text-align: center;
+  padding: 32px;
+  color: rgba(236, 218, 255, 0.6);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchInput {
+    min-width: 100%;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 8px 10px;
+  }
+}

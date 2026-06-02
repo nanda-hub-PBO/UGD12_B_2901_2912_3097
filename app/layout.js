@@ -1,11 +1,18 @@
 import './globals.css'
-import MaritimePlatform from './components/MaritimePlatform'
+
+export const metadata = {
+  title: {
+    default: 'Tessera Maritime',
+    template: '%s | Tessera Maritime'
+  },
+  description: 'Sistem Manajemen Transportasi Laut dan Kargo Terintegrasi',
+}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body>
-        <MaritimePlatform>{children}</MaritimePlatform>
+        {children}
       </body>
     </html>
   )

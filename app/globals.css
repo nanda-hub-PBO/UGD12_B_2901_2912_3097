@@ -56,6 +56,77 @@ button {
   cursor: pointer;
 }
 
+.error-page-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top, rgba(143, 61, 255, 0.18), transparent 28%),
+    linear-gradient(180deg, #07020c 0%, #020104 100%);
+}
+
+.error-page-panel {
+  width: min(520px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(176, 101, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(10, 4, 17, 0.92);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+  text-align: center;
+}
+
+.error-page-code {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--red);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.error-page-panel h1 {
+  margin-bottom: 10px;
+  color: white;
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1.2;
+}
+
+.error-page-panel p {
+  margin: 0 auto 20px;
+  color: rgba(236, 218, 255, 0.68);
+  line-height: 1.6;
+}
+
+.error-page-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.error-page-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(144, 82, 255, 0.42);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #8f49ff, #7026fc);
+  color: white;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.error-page-button.secondary {
+  background: rgba(41, 12, 61, 0.52);
+  color: rgba(238, 223, 255, 0.84);
+}
+
 .platform-shell {
   padding: 0;
 }

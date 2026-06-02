@@ -414,24 +414,88 @@ function getRouteHref(tabId) {
       return '/dashboard'
     case 'fleet':
       return '/fleet'
+    case 'map':
+      return '/map'
     case 'analytics':
       return '/analytics'
+    case 'admin':
+      return '/admin/users'
     default:
       return null
   }
 }
 
 function getTabFromPathname(pathname) {
+  if (pathname.startsWith('/admin')) {
+    return 'admin'
+  }
   switch (pathname) {
     case '/dashboard':
       return 'dashboard'
     case '/fleet':
       return 'fleet'
+    case '/map':
+      return 'map'
     case '/analytics':
       return 'analytics'
     default:
       return null
   }
+}
+
+async function parseApiResponse(response) {
+  try {
+    return await response.json()
+  } catch {
+    return {
+      message: response.ok
+        ? ''
+        : `Server mengirim respons yang tidak valid. Status: ${response.status}.`,
+    }
+  }
+}
+
+const vehicleCodePattern = /^(?=.*[A-Z])(?=.*\d)[A-Z0-9-]+$/
+const vehicleCapacityPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9 ]+$/
+const digitsOnlyPattern = /^\d+$/
+const decimalNumberPattern = /^\d+([.,]\d+)?$/
+const lettersOnlyPattern = /^[A-Za-z ]+$/
+const cargoLetterFields = new Set([
+  'senderName',
+  'receiverName',
+  'originCity',
+  'destinationCity',
+  'itemType',
+  'itemName',
+  'vehicleType',
+])
+
+function cleanCargoFormValue(field, value) {
+  if (cargoLetterFields.has(field)) {
+    return value.replace(/[^A-Za-z ]/g, '')
+  }
+
+  if (field === 'phoneNumber' || field === 'shippingPrice') {
+    return value.replace(/\D/g, '')
+  }
+
+  if (field === 'itemWeight') {
+    return value.replace(/[^\d.,]/g, '')
+  }
+
+  return value
+}
+
+function cleanVehicleFormValue(field, value) {
+  if (field === 'code') {
+    return value.toUpperCase().replace(/[^A-Z0-9-]/g, '')
+  }
+
+  if (field === 'capacity') {
+    return value.replace(/[^A-Za-z0-9 ]/g, '')
+  }
+
+  return value
 }
 
 function Icon({ name }) {
@@ -1793,7 +1857,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
           throw new Error('Gagal mengambil data cargo.')
         }
 
-        const data = await response.json()
+        const data = await parseApiResponse(response)
 
         if (!ignore) {
           setCargoItems(Array.isArray(data.items) ? data.items : [])
@@ -1833,7 +1897,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
           throw new Error('Gagal mengambil data kendaraan.')
         }
 
-        const data = await response.json()
+        const data = await parseApiResponse(response)
 
         if (!ignore) {
           setVehicles(Array.isArray(data.items) ? data.items : [])
@@ -2013,27 +2077,70 @@ function AdminView({ adminMode, onAdminModeChange }) {
   const handleCargoFormChange = (field, value) => {
     setCargoFormState((current) => ({
       ...current,
-      [field]: value,
+      [field]: cleanCargoFormValue(field, value),
     }))
   }
 
   const handleSubmitCargoForm = async (event) => {
     event.preventDefault()
 
-    const trimmedResi = cargoFormState.resi.trim()
-    const trimmedSenderName = cargoFormState.senderName.trim()
-    const trimmedReceiverName = cargoFormState.receiverName.trim()
-    const trimmedItemName = cargoFormState.itemName.trim()
+    const trimmedResi = (cargoFormState.resi || '').trim()
+    const trimmedSenderName = (cargoFormState.senderName || '').trim()
+    const trimmedReceiverName = (cargoFormState.receiverName || '').trim()
+    const trimmedItemName = (cargoFormState.itemName || '').trim()
     const trimmedPhoneNumber = (cargoFormState.phoneNumber || '').trim()
     const trimmedOriginCity = (cargoFormState.originCity || '').trim()
     const trimmedDestinationCity = (cargoFormState.destinationCity || '').trim()
     const trimmedItemType = (cargoFormState.itemType || '').trim()
+    const trimmedVehicleType = (cargoFormState.vehicleType || '').trim()
     const trimmedDescription = (cargoFormState.description || '').trim()
-    const itemWeight = Number(cargoFormState.itemWeight)
-    const shippingPrice = Number(cargoFormState.shippingPrice)
+    const trimmedItemWeight = String(cargoFormState.itemWeight || '').trim()
+    const trimmedShippingPrice = String(cargoFormState.shippingPrice || '').trim()
+    const itemWeight = Number(trimmedItemWeight.replace(',', '.'))
+    const shippingPrice = Number(trimmedShippingPrice)
 
-    if (!trimmedResi || !trimmedSenderName || !trimmedReceiverName || !trimmedItemName || !trimmedPhoneNumber || !trimmedOriginCity || !trimmedDestinationCity || !trimmedItemType || !cargoFormState.shippingDate) {
+    if (!trimmedResi || !trimmedSenderName || !trimmedReceiverName || !trimmedItemName || !trimmedPhoneNumber || !trimmedOriginCity || !trimmedDestinationCity || !trimmedItemType || !trimmedVehicleType || !cargoFormState.shippingDate) {
       setCargoFormError('Semua data cargo wajib diisi dengan lengkap.')
+      return
+    }
+
+    const invalidLetterField = [
+      [trimmedSenderName, 'Nama pengirim'],
+      [trimmedReceiverName, 'Nama penerima'],
+      [trimmedOriginCity, 'Kota asal'],
+      [trimmedDestinationCity, 'Kota tujuan'],
+      [trimmedItemType, 'Jenis barang'],
+      [trimmedItemName, 'Nama barang'],
+      [trimmedVehicleType, 'Jenis kendaraan'],
+    ].find(([value]) => !lettersOnlyPattern.test(value))
+
+    if (invalidLetterField) {
+      setCargoFormError(`${invalidLetterField[1]} hanya boleh berisi huruf dan spasi.`)
+      return
+    }
+
+    if (trimmedSenderName.toLowerCase() === trimmedReceiverName.toLowerCase()) {
+      setCargoFormError('Nama pengirim dan nama penerima tidak boleh sama.')
+      return
+    }
+
+    if (!digitsOnlyPattern.test(trimmedPhoneNumber)) {
+      setCargoFormError('Nomor telepon hanya boleh berisi angka.')
+      return
+    }
+
+    if (!trimmedPhoneNumber.startsWith('08') || trimmedPhoneNumber.length < 10 || trimmedPhoneNumber.length > 13) {
+      setCargoFormError('Nomor telepon harus diawali dengan \'08\' dan terdiri dari 10 hingga 13 digit.')
+      return
+    }
+
+    if (trimmedOriginCity.toLowerCase() === trimmedDestinationCity.toLowerCase()) {
+      setCargoFormError('Kota asal dan kota tujuan tidak boleh sama.')
+      return
+    }
+
+    if (!decimalNumberPattern.test(trimmedItemWeight)) {
+      setCargoFormError('Berat barang hanya boleh berisi angka. Gunakan koma atau titik untuk desimal.')
       return
     }
 
@@ -2042,8 +2149,13 @@ function AdminView({ adminMode, onAdminModeChange }) {
       return
     }
 
-    if (!Number.isFinite(shippingPrice) || shippingPrice < 0) {
-      setCargoFormError('Harga pengiriman harus berupa angka yang valid.')
+    if (!digitsOnlyPattern.test(trimmedShippingPrice)) {
+      setCargoFormError('Harga pengiriman hanya boleh berisi angka.')
+      return
+    }
+
+    if (!Number.isFinite(shippingPrice) || shippingPrice <= 0) {
+      setCargoFormError('Harga pengiriman harus berupa angka yang valid dan lebih besar dari 0.')
       return
     }
 
@@ -2063,13 +2175,14 @@ function AdminView({ adminMode, onAdminModeChange }) {
           destinationCity: trimmedDestinationCity,
           itemType: trimmedItemType,
           itemName: trimmedItemName,
+          vehicleType: trimmedVehicleType,
           itemWeight,
           description: trimmedDescription,
           shippingPrice,
         }),
       })
 
-      const data = await response.json()
+      const data = await parseApiResponse(response)
 
       if (!response.ok) {
         throw new Error(data.message || (cargoFormMode === 'add' ? 'Gagal menambahkan data cargo.' : 'Gagal memperbarui data cargo.'))
@@ -2097,7 +2210,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
       const response = await fetch(`/api/cargo?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
       })
-      const data = await response.json()
+      const data = await parseApiResponse(response)
 
       if (!response.ok) {
         throw new Error(data.message || 'Gagal menghapus data cargo.')
@@ -2147,19 +2260,29 @@ function AdminView({ adminMode, onAdminModeChange }) {
   const handleVehicleFormChange = (field, value) => {
     setVehicleFormState((current) => ({
       ...current,
-      [field]: value,
+      [field]: cleanVehicleFormValue(field, value),
     }))
   }
 
   const handleSubmitVehicleForm = async (event) => {
     event.preventDefault()
 
-    const trimmedName = vehicleFormState.name.trim()
-    const trimmedCode = vehicleFormState.code.trim().toUpperCase()
-    const trimmedCapacity = vehicleFormState.capacity.trim()
+    const trimmedName = (vehicleFormState.name || '').trim()
+    const trimmedCode = (vehicleFormState.code || '').trim().toUpperCase()
+    const trimmedCapacity = (vehicleFormState.capacity || '').trim()
 
     if (!trimmedName || !trimmedCode || !trimmedCapacity) {
       setVehicleFormError('Semua data kendaraan wajib diisi.')
+      return
+    }
+
+    if (!vehicleCodePattern.test(trimmedCode)) {
+      setVehicleFormError('Kode kendaraan harus berisi gabungan huruf dan angka. Contoh: VH-003.')
+      return
+    }
+
+    if (!vehicleCapacityPattern.test(trimmedCapacity)) {
+      setVehicleFormError('Kapasitas muatan harus berisi gabungan angka dan huruf. Contoh: 2 Ton.')
       return
     }
 
@@ -2177,7 +2300,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
         }),
       })
 
-      const data = await response.json()
+      const data = await parseApiResponse(response)
 
       if (!response.ok) {
         throw new Error(data.message || (vehicleFormMode === 'add' ? 'Gagal menambahkan data kendaraan.' : 'Gagal memperbarui data kendaraan.'))
@@ -2205,7 +2328,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
       const response = await fetch(`/api/vehicles?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
       })
-      const data = await response.json()
+      const data = await parseApiResponse(response)
 
       if (!response.ok) {
         throw new Error(data.message || 'Gagal menghapus data kendaraan.')
@@ -2368,7 +2491,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
                   </button>
                 </div>
 
-                <form className="admin-user-form" onSubmit={handleSubmitUserForm}>
+                <form className="admin-user-form" onSubmit={handleSubmitUserForm} noValidate>
                   <div className="admin-form-grid">
                     <label className="admin-form-field">
                       <span>ID User</span>
@@ -2539,7 +2662,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
                   </button>
                 </div>
 
-                <form className="admin-user-form" onSubmit={handleSubmitCargoForm}>
+                <form className="admin-user-form" onSubmit={handleSubmitCargoForm} noValidate>
                   <div className="admin-form-grid">
                     <label className="admin-form-field">
                       <span>Id Pengiriman / No Resi</span>
@@ -2559,7 +2682,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
                     </label>
                     <label className="admin-form-field">
                       <span>No Telepon</span>
-                      <input type="tel" value={cargoFormState.phoneNumber || ''} onChange={(event) => handleCargoFormChange('phoneNumber', event.target.value)} required />
+                      <input type="tel" inputMode="numeric" value={cargoFormState.phoneNumber || ''} onChange={(event) => handleCargoFormChange('phoneNumber', event.target.value)} required />
                     </label>
                     <label className="admin-form-field">
                       <span>Kota Asal</span>
@@ -2579,13 +2702,13 @@ function AdminView({ adminMode, onAdminModeChange }) {
                     </label>
                     <label className="admin-form-field">
                       <span>Berat Barang (Kg)</span>
-                      <input type="number" min="0" step="0.1" value={cargoFormState.itemWeight || ''} onChange={(event) => handleCargoFormChange('itemWeight', event.target.value)} required />
+                      <input type="text" inputMode="decimal" value={cargoFormState.itemWeight || ''} onChange={(event) => handleCargoFormChange('itemWeight', event.target.value)} required />
                     </label>
                     <label className="admin-form-field">
                       <span>Harga/Tarif Pengiriman</span>
                       <input
-                        type="number"
-                        min="0"
+                        type="text"
+                        inputMode="numeric"
                         value={cargoFormState.shippingPrice}
                         onChange={(event) => handleCargoFormChange('shippingPrice', event.target.value)}
                         required
@@ -2752,7 +2875,7 @@ function AdminView({ adminMode, onAdminModeChange }) {
                   </button>
                 </div>
 
-                <form className="admin-user-form" onSubmit={handleSubmitVehicleForm}>
+                <form className="admin-user-form" onSubmit={handleSubmitVehicleForm} noValidate>
                   <div className="admin-form-grid">
                     <label className="admin-form-field">
                       <span>ID Kendaraan</span>
@@ -2772,11 +2895,24 @@ function AdminView({ adminMode, onAdminModeChange }) {
                     </label>
                     <label className="admin-form-field">
                       <span>Kode Kendaraan</span>
-                      <input type="text" value={vehicleFormState.code} onChange={(event) => handleVehicleFormChange('code', event.target.value)} required />
+                      <input
+                        type="text"
+                        value={vehicleFormState.code}
+                        onChange={(event) => handleVehicleFormChange('code', event.target.value)}
+                        placeholder="VH-003"
+                        required
+                      />
                     </label>
                     <label className="admin-form-field">
                       <span>Kapasitas Muatan</span>
-                      <input type="text" value={vehicleFormState.capacity} onChange={(event) => handleVehicleFormChange('capacity', event.target.value)} required />
+                      <input
+                        type="text"
+                        inputMode="text"
+                        value={vehicleFormState.capacity}
+                        onChange={(event) => handleVehicleFormChange('capacity', event.target.value)}
+                        placeholder="2 Ton"
+                        required
+                      />
                     </label>
                     <label className="admin-form-field">
                       <span>Status Kendaraan</span>
@@ -2897,11 +3033,46 @@ export default function MaritimePlatform() {
   const [activeTab, setActiveTab] = useState(routeTab ?? 'company')
   const [hoveredTab, setHoveredTab] = useState(null)
   const [selectedVesselId, setSelectedVesselId] = useState('V001')
-  const [adminMode, setAdminMode] = useState('users')
+  const [adminMode, setAdminMode] = useState(() => {
+    if (pathname === '/admin/activity') return 'activity'
+    if (pathname === '/admin/cargo') return 'cargo'
+    if (pathname === '/admin/vehicles') return 'vehicles'
+    return 'users'
+  })
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [notifications, setNotifications] = useState(initialNotifications)
   const { isAuthenticated, isAuthReady, userRole } = authState
   const currentTab = routeTab ?? activeTab
+
+  useEffect(() => {
+    let title = 'Tessera Maritime'
+
+    if (currentTab === 'dashboard') {
+      title = 'Dashboard | Tessera Maritime'
+    } else if (currentTab === 'fleet') {
+      title = 'Fleet Management | Tessera Maritime'
+    } else if (currentTab === 'map') {
+      title = 'Live Map Tracking | Tessera Maritime'
+    } else if (currentTab === 'analytics') {
+      title = 'Analytics & Report | Tessera Maritime'
+    } else if (currentTab === 'admin') {
+      if (adminMode === 'users') {
+        title = 'User Management | Admin | Tessera Maritime'
+      } else if (adminMode === 'activity') {
+        title = 'Activity Log | Admin | Tessera Maritime'
+      } else if (adminMode === 'cargo') {
+        title = 'Cargo Data | Admin | Tessera Maritime'
+      } else if (adminMode === 'vehicles') {
+        title = 'Kendaraan | Admin | Tessera Maritime'
+      } else {
+        title = 'Admin Panel | Tessera Maritime'
+      }
+    } else if (currentTab === 'company') {
+      title = 'Tessera Maritime | Logistik & Kargo Laut Indonesia'
+    }
+
+    document.title = title
+  }, [currentTab, adminMode])
 
   const unreadCount = notifications.filter((item) => !item.read).length
   const allowedTabs = useMemo(
@@ -2931,7 +3102,7 @@ export default function MaritimePlatform() {
   }, [isNotificationOpen])
 
   useEffect(() => {
-    if (!isAuthReady || isAuthenticated || pathname === '/') {
+    if (!isAuthReady || isAuthenticated || pathname === '/' || pathname?.startsWith('/dashboard')) {
       return
     }
 
@@ -3040,6 +3211,19 @@ export default function MaritimePlatform() {
 
     if (pathname !== '/') {
       router.push('/')
+    }
+  }
+
+  const handleAdminModeChange = (mode) => {
+    setAdminMode(mode)
+    if (mode === 'users') {
+      router.push('/admin/users')
+    } else if (mode === 'activity') {
+      router.push('/admin/activity')
+    } else if (mode === 'cargo') {
+      router.push('/admin/cargo')
+    } else if (mode === 'vehicles') {
+      router.push('/admin/vehicles')
     }
   }
 
@@ -3183,7 +3367,7 @@ export default function MaritimePlatform() {
             setSelectedVesselId={setSelectedVesselId}
             userRole={userRole}
             adminMode={adminMode}
-            setAdminMode={setAdminMode}
+            setAdminMode={handleAdminModeChange}
           />
         </Suspense>
       </div>
